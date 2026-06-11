@@ -1,0 +1,101 @@
+# browser-use-clj
+
+browser-use-style browser automation agent in **portable Clojure** —
+every namespace is `.cljc`, designed for **Clojure-on-WASM hosts**
+(SCI, ClojureScript, GraalVM, kotoba-clj) as well as the JVM. The
+browser itself is an injected host capability; the action history is
+persisted through a **Datomic API**.
+
+Built on [langgraph-clj](https://github.com/com-junkawasaki/langgraph-clj)
+/ [langchain-clj](https://github.com/com-junkawasaki/langchain-clj) —
+the same layering as upstream browser-use over langchain.
+
+```
+src/browseruse/
+  browser.cljc   IBrowser protocol (host capability) + mock-browser
+  actions.cljc   action registry → tools (navigate / click / type / … / done)
+  agent.cljc     agent loop (langgraph StateGraph) + action log as datoms
+```
+
+## Design
+
+- **Indexed-element page representation** — the model sees the page
+  the way browser-use renders it:
+
+  ```
+  Current page: Example Shop (https://shop.example)
+  Interactive elements:
+  [0]<a>Pricing</a>
+  [1]<input name="q" value="">
+  ```
+
+- **Browser = injected host capability** — implement `IBrowser`
+  (Playwright/CDP on the JVM, the page itself in-browser, an
+  OS-automation MCP on desktop). `mock-browser` ships a pure-data site
+  model for tests and offline runs.
+- **Datomic API premise** — every executed action becomes a datom
+  (`:action/name`, `:action/url`, …): "every URL the agent visited"
+  is a Datalog query. Graph checkpoints (resume / human-in-the-loop)
+  come from langgraph-clj.
+
+## Quickstart
+
+```clojure
+(require '[browseruse.browser :as b]
+         '[browseruse.agent :as agent]
+         '[langchain.model :as model]
+         '[langchain.db :as db])
+
+;; host capability: real IBrowser impl, or the mock:
+(def browser
+  (b/mock-browser
+   {"https://shop.example"
+    {:title "Example Shop"
+     :elements [{:tag "a" :text "Pricing" :nav "https://shop.example/pricing"}]}
+    "https://shop.example/pricing"
+    {:title "Pricing — $29/mo" :elements []}}
+   "https://shop.example"))
+
+(def conn (db/create-conn agent/log-schema))
+
+(agent/run
+ {:model (model/anthropic-model {:api-key … :http-fn host-fetch …})
+  :browser browser
+  :task "Find the price of the product"
+  :history-conn conn
+  :session-id "s1"
+  :max-steps 25})
+;; => {:result "…" :done true :messages […] :steps n}
+
+;; the audit trail is datoms:
+(db/q '[:find ?name ?url
+        :where [?a :action/name ?name] [?a :action/url ?url]]
+      (db/db conn))
+```
+
+Custom actions are just more tool maps:
+
+```clojure
+(agent/run {:actions (conj (browseruse.actions/default-actions browser)
+                           {:name "save_note" :description "…"
+                            :schema {…} :fn (fn [args] …)})
+            …})
+```
+
+## Mapping from upstream
+
+See [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) for
+the browser-use → browser-use-clj correspondence (indexed elements,
+Controller/Registry, agent loop, done action, history).
+
+## Tests / example
+
+```sh
+clojure -M:test     # 4 tests, 15 assertions
+clojure -Sdeps '{:paths ["src" "examples"]
+                 :deps {io.github.com-junkawasaki/langgraph-clj
+                        {:git/tag "v0.2.0" :git/sha "133740f"}}}' \
+        -M -e "(require 'shop-agent) (shop-agent/-main)"
+```
+
+Workspace development against local checkouts: `clojure -M:dev:test`.
