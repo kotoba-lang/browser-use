@@ -13,4 +13,9 @@
   :dev {:override-deps {io.github.com-junkawasaki/langgraph-clj
                         {:local/root "../langgraph-clj"}
                         io.github.com-junkawasaki/langchain-clj
-                        {:local/root "../langchain-clj"}}}}}
+                        {:local/root "../langchain-clj"}}}
+  ;; Real browser via Playwright — used by examples/yoro_visual_test.clj live mode
+  ;; Model: Murakumo LiteLLM 127.0.0.1:4000 (ADR-2605215000 Murakumo-only invariant)
+  :playwright {:extra-paths ["examples"]
+               :extra-deps {com.microsoft.playwright/playwright {:mvn/version "1.44.0"}
+                            clj-http/clj-http                  {:mvn/version "3.13.0"}}}}}
