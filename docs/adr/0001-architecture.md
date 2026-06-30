@@ -16,6 +16,23 @@ browser-use 相当のブラウザ操作エージェントを、
 
 ## 決定
 
+### 0. `agent-browser` との位置づけ
+
+外部ツール名としての `agent-browser` CLI は必須依存にしない。kotoba では
+同じ役割を `browser-use-clj` / `browser-agent-clj` / `playwright-clj` の
+積層で実装する。
+
+```
+agent-browser 相当の利用者向け能力
+  = browser-agent-clj   ; supervisor / owned browser / multi-agent orchestration
+  + browser-use-clj     ; IBrowser + indexed elements + action tools
+  + playwright-clj      ; JVM host capability for real Chromium
+```
+
+したがって、アプリや ADR では「`agent-browser` CLI を呼べること」を前提に
+せず、`IBrowser` capability を注入できることを前提にする。CLI が必要な場合は
+この stack の薄い wrapper として後から提供する。
+
 ### 1. ブラウザはホスト能力 (IBrowser protocol)
 
 `browseruse.browser/IBrowser`(navigate!/click!/input-text!/scroll!/
@@ -52,5 +69,7 @@ deps は langgraph-clj のみ(langchain-clj が transitive に入る)。
 ## 非スコープ (v0.1)
 
 - 実ブラウザドライバ(Playwright 相当)— ホスト注入
+- `agent-browser` 互換 CLI — thin wrapper として後続で追加可能だが、
+  core architecture には入れない
 - スクリーンショット/vision 入力(content blocks はホスト実装の自由)
 - マルチタブ・ファイルダウンロード・DOM diff 最適化

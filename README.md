@@ -6,8 +6,8 @@ every namespace is `.cljc`, designed for **Clojure-on-WASM hosts**
 browser itself is an injected host capability; the action history is
 persisted through a **Datomic API**.
 
-Built on [langgraph-clj](https://github.com/com-junkawasaki/langgraph-clj)
-/ [langchain-clj](https://github.com/com-junkawasaki/langchain-clj) —
+Built on [langgraph-clj](https://github.com/kotoba-lang/langgraph)
+/ [langchain-clj](https://github.com/kotoba-lang/langchain) —
 the same layering as upstream browser-use over langchain.
 
 ```
@@ -37,6 +37,23 @@ src/browseruse/
   (`:action/name`, `:action/url`, …): "every URL the agent visited"
   is a Datalog query. Graph checkpoints (resume / human-in-the-loop)
   come from langgraph-clj.
+
+## `agent-browser` compatibility
+
+`agent-browser` is treated as a capability role, not as a required CLI
+dependency. In the kotoba stack the equivalent implementation is:
+
+```
+browser-agent-clj -> browser-use-clj -> playwright-clj
+```
+
+- `browser-agent-clj`: owned browser session, supervisor, multi-agent control
+- `browser-use-clj`: `IBrowser` protocol, indexed elements, action tools, logs
+- `playwright-clj`: JVM host implementation for real Chromium
+
+Applications should depend on an injected `IBrowser` capability. A CLI named
+`agent-browser` can be added later as a thin wrapper over this stack without
+changing the core agent/runtime model.
 
 ## Quickstart
 
