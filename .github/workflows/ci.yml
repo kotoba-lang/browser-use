@@ -18,5 +18,6 @@ jobs:
         with:
           cli: latest
       - run: clojure -M:test
+      - run: clojure -M:cloud:test -d test-cloud
       - run: clojure -M:playwright:test -d test-playwright
       - run: clojure -M:lint

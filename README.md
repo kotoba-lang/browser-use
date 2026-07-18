@@ -1,5 +1,9 @@
 # browser-use-clj
 
+Cloud v3 の実接続確認は [`docs/cloud-live-probe.md`](docs/cloud-live-probe.md)
+を参照してください。既定はdry-runで、課金されるsession作成には
+`--execute`と`BROWSER_USE_API_KEY`の両方が必要です。
+
 browser-use-style browser automation agent in **portable Clojure** —
 every namespace is `.cljc`, designed for **Clojure-on-WASM hosts**
 (SCI, ClojureScript, GraalVM, kotoba-clj) as well as the JVM. The
