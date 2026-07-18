@@ -109,7 +109,7 @@
         (swap! s (fn [st] (sync-tab (-> st (update :history conj (:url st)) (assoc :url url)))))
         (public-state site @s))
       (-click! [this index]
-        (let [{:keys [url] :as st} @s
+        (let [st @s
               el (require-element site st index)]
           (when-let [download (:download el)]
             (swap! s update :downloads conj download))

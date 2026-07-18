@@ -3,14 +3,13 @@
 
   Every session owns its Playwright, Browser and BrowserContext.  `:close` is
   idempotent and closes all three, making it suitable for `try`/`finally`."
-  (:require [browseruse.browser :as b]
-            [clojure.java.io :as io])
+  (:require [browseruse.browser :as b])
   (:import [com.microsoft.playwright Browser Browser$NewContextOptions
             BrowserContext BrowserContext$StorageStateOptions BrowserType$LaunchOptions
             Page Page$ScreenshotOptions Page$WaitForFunctionOptions
             Playwright]
            [com.microsoft.playwright.options Cookie LoadState ScreenshotType]
-           [java.nio.file Files Path Paths]
+           [java.nio.file Path Paths]
            [java.util UUID]
            [java.util.function Consumer]))
 
@@ -81,7 +80,7 @@
            :same-site (some-> (.-sameSite c) str)}
     (.-url c) (assoc :url (.-url c))))
 
-(defn- cookie-from-map [{:keys [name value url domain path expires http-only secure same-site]}]
+(defn- cookie-from-map [{:keys [name value url domain path expires http-only secure]}]
   (let [c (Cookie. name value)]
     (when url (set! (.-url c) url))
     (when domain (set! (.-domain c) domain))
@@ -142,7 +141,6 @@
                                                         :download d}))))
                        id))
          initial-id (register! page)
-         tab-id (fn [p] (some (fn [[id candidate]] (when (identical? p candidate) id)) @tabs*))
          session
          {:browser (make-browser page* ops*)
           :page page*
