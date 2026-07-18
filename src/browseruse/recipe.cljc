@@ -22,6 +22,7 @@
              {:do :click :match {:tag \"button\" :text \"Create new account\"}}]}"
   (:require [browseruse.browser :as b]
             [browseruse.guardrail :as guardrail]
+            [browseruse.captcha :as captcha]
             [browseruse.history :as history]
             [browseruse.session :as session]
             [clojure.string :as str]))
@@ -76,7 +77,8 @@
     :click    {:match ..}                  click the matched element
     :assert   {:match ..}                  fail unless the element exists
     :screenshot {:as ..}                   capture a screenshot
-    :wait-human {:prompt ..}               pause for the operator (CAPTCHA etc.)"
+    :wait-human {:prompt ..}               generic operator pause
+    :captcha {:mode :human|:external ...}  bounded CAPTCHA orchestration"
   [browser {:keys [url steps]}
    {:keys [resolve-secret screenshot pause select check verbose settings session history]
     :or {resolve-secret (fn [_] (throw (ex-info "recipe: no :resolve-secret given" {})))
@@ -85,8 +87,11 @@
          select (fn [_ _] (throw (ex-info "recipe: :select step needs a :select opt fn (host capability)" {})))
          check (fn [_] (throw (ex-info "recipe: :check step needs a :check opt fn (host capability)" {})))}}]
   (let [settings (guardrail/policy settings)
+        audit-settings (cond-> settings
+                         (:captcha settings)
+                         (update :captcha captcha/public-settings))
         session (or session (session/create-session {:id "recipe"}))
-        history (or history (atom (history/empty-history (:id session) settings)))]
+        history (or history (atom (history/empty-history (:id session) audit-settings)))]
   (when url
     (guardrail/assert-action! settings {:name "navigate" :input {:url url}})
     (b/-navigate! browser url))
@@ -121,12 +126,34 @@
                   :assert {:do do :index idx :ok true}
                   :screenshot {:do do :as as :path (screenshot as)}
                   :wait-human {:do do :prompt prompt :resumed (boolean (pause prompt))}
+                  :captcha (let [captcha-opts (merge (:captcha settings)
+                                                     (:captcha step)
+                                                     {:session session
+                                                      :human-handler
+                                                      (or (get-in step [:captcha :human-handler])
+                                                          (fn [challenge]
+                                                            (pause (or prompt
+                                                                       (str "Solve " (:type challenge)
+                                                                            " CAPTCHA, then continue")))))})
+                                 challenge (or (:challenge step) (captcha/detect (b/-state browser)))
+                                 solved (when challenge (captcha/solve! challenge captcha-opts))]
+                             {:do do :detected? (boolean challenge)
+                              :result (when solved (captcha/audit-result solved))})
                   (throw (ex-info (str "recipe: unknown :do " (pr-str do)) {:step step}))))
                 result (:value executed)
                 _ (guardrail/assert-url! settings (:url (b/-state browser)))
+                audit-step (if (= :captcha do)
+                             (cond-> (dissoc step :captcha :challenge)
+                               (:captcha step)
+                               (assoc :captcha (captcha/public-settings (:captcha step)))
+                               (:challenge step)
+                               (assoc :challenge
+                                      (select-keys (:challenge step)
+                                                   [:id :type :url :element-index :evidence])))
+                             (dissoc step :value))
                 action-result (history/->ActionResult
                                step-number (clojure.core/name do)
-                               (guardrail/redact (dissoc step :value) (:sensitive-data settings))
+                               (guardrail/redact audit-step (:sensitive-data settings))
                                (guardrail/redact result (:sensitive-data settings))
                                nil (:url (b/-state browser)) (:attempts executed)
                                (:elapsed-ms executed) {:recipe? true})]
