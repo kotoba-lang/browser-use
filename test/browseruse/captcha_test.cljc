@@ -27,6 +27,11 @@
   (is (= :hcaptcha
          (:type (captcha/detect {:elements [{:index 0 :tag "div"
                                              :attrs {:class "h-captcha"}}]}))))
+  (is (= "public-site-key"
+         (:site-key (captcha/detect {:url "https://example.test"
+                                     :elements [{:index 1 :tag "div"
+                                                 :attrs {:class "cf-turnstile"
+                                                         :data-sitekey "public-site-key"}}]}))))
   (is (nil? (captcha/detect {:elements [{:index 0 :tag "button" :text "Continue"}]}))))
 
 (deftest human-flow-pauses-resumes-and-emits-public-audit

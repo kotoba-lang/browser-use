@@ -21,6 +21,9 @@
                :extra-deps {com.microsoft.playwright/playwright {:mvn/version "1.44.0"}
                             clj-http/clj-http                  {:mvn/version "3.13.0"}
                             cheshire/cheshire                  {:mvn/version "5.13.0"}}}
+  ;; Production CapSolver JVM transport. Portable adapter/tests stay zero-dep.
+  :capsolver {:extra-paths ["examples"]
+              :extra-deps {cheshire/cheshire {:mvn/version "5.13.0"}}}
   ;; clj-kondo as a Clojars lib (no Homebrew/system install needed).
   :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test"
