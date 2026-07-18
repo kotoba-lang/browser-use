@@ -99,6 +99,26 @@ Custom actions are just more tool maps:
             …})
 ```
 
+## CAPTCHA orchestration
+
+CAPTCHA handling is opt-in and provider-neutral. Human hand-off pauses and
+resumes the agent session; an external adapter implements
+`browseruse.captcha/CaptchaProvider`. Credentials must be captured inside that
+adapter, never placed in settings:
+
+```clojure
+{:settings
+ {:captcha {:mode :external
+            :provider solver-adapter
+            :timeout-ms 120000
+            :max-polls 60
+            :apply-solution apply-token!}}}
+```
+
+Recipes can use `{:do :captcha :captcha {:mode :human}}`. Solver tokens are
+available only to `:apply-solution`; audit hooks and history receive a redacted
+result. CAPTCHA automation must only be used where the caller is authorized.
+
 ## Mapping from upstream
 
 See [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) for

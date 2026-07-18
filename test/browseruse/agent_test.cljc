@@ -4,6 +4,7 @@
             [browseruse.browser :as b]
             [browseruse.actions :as actions]
             [browseruse.agent :as agent]
+            [browseruse.session :as session]
             [langchain.model :as model]
             [langchain.message :as msg]
             [langchain.db :as db]))
@@ -104,3 +105,33 @@
     (is (thrown-with-msg? #?(:clj Exception :cljs js/Error) #"max actions per step"
                           (agent/run {:model m :browser br :task "bounded"
                                       :settings {:max-actions-per-step 1}})))))
+
+(deftest agent-detects-captcha-pauses-solves-and-resumes-before-model
+  (let [captcha-site {"https://example.com/verify"
+                      {:title "Verify"
+                       :elements [{:tag "iframe"
+                                   :attrs {:title "reCAPTCHA"
+                                           :src "https://google.com/recaptcha/api2/anchor"}}]}}
+        br (b/mock-browser captcha-site "https://example.com/verify")
+        seen-status (atom nil)
+        s (session/create-session {:id "captcha-agent"})
+        m (model/mock-model
+           [(msg/ai "" {:tool-calls [{:id "done" :name "done"
+                                      :input {:text "verified" :success true}}]})])
+        result (agent/run
+                {:model m :browser br :task "Continue after verification" :session s
+                 :settings {:captcha
+                            {:mode :human
+                             :human-handler
+                             (fn [challenge]
+                               (reset! seen-status (session/status s))
+                               (is (= :recaptcha (:type challenge)))
+                               true)}}})]
+    (is (= :paused @seen-status) "operator is called only after session pause")
+    (is (= :running (session/status s)) "solved challenge resumes before model call")
+    (is (:done result))
+    (is (= "verified" (:result result)))
+    (is (= {:mode :human :timeout-ms 120000 :poll-interval-ms 1000
+            :max-polls 120 :detect? true}
+           (get-in result [:history :settings :captcha]))
+        "runtime handler is excluded from durable history")))

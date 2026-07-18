@@ -58,3 +58,19 @@
     (is (not (:ok r)))
     (is (re-find #"no element matched" (:error r)))
     (is (= 1 (count (:log r))) "stopped before the unmatched step; later steps skipped")))
+
+(deftest recipe-captcha-step-detects-and-hands-off-to-human
+  (let [captcha-site {"https://site/challenge"
+                      {:title "Verify"
+                       :elements [{:tag "iframe"
+                                   :attrs {:src "https://challenges.cloudflare.com/turnstile/v0"}}]}}
+        browser (b/mock-browser captcha-site "https://site/challenge")
+        pauses (atom [])
+        result (recipe/run-recipe! browser
+                                   {:steps [{:do :captcha :prompt "Verify in browser"}]}
+                                   {:pause #(do (swap! pauses conj %) true)
+                                    :settings {:captcha {:mode :human}}})]
+    (is (:ok result))
+    (is (= ["Verify in browser"] @pauses))
+    (is (= :solved (get-in result [:log 0 :result :status])))
+    (is (not (contains? (get-in result [:log 0 :result]) :solution)))))

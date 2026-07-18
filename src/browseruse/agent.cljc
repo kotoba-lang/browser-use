@@ -20,6 +20,7 @@
             [browseruse.browser :as b]
             [browseruse.actions :as actions]
             [browseruse.guardrail :as guardrail]
+            [browseruse.captcha :as captcha]
             [browseruse.history :as history]
             [browseruse.session :as session]))
 
@@ -27,7 +28,10 @@
   {:max-steps 25 :max-actions-per-step 10 :max-action-retries 0
    :action-timeout-ms 120000 :allowed-domains [] :sensitive-data {}
    :output-validator nil :planner {:enabled? false}
-   :vision {:enabled? false} :metadata {}})
+   :vision {:enabled? false} :metadata {}
+   ;; Opt-in preserves legacy behaviour. :human and :external are implemented
+   ;; by browseruse.captcha without coupling the agent to a solver vendor.
+   :captcha {:mode :disabled}})
 
 (defn agent-settings
   "Normalize structured AgentSettings. Unknown keys are retained for forward
@@ -39,7 +43,7 @@
         (throw (ex-info "browser-use: AgentSettings value must be positive" {:key k}))))
     (when (neg? (:max-action-retries s))
       (throw (ex-info "browser-use: retries cannot be negative" {})))
-    s))
+    (assoc s :captcha (merge (:captcha default-settings) (:captcha s)))))
 
 (def default-system-prompt
   (str "You are a browser automation agent. You control a browser via tools.\n"
@@ -91,7 +95,8 @@
   (let [settings (agent-settings (merge (or settings {})
                                         (when max-steps {:max-steps max-steps})))
         session (or session (session/create-session {:id session-id}))
-        history (or history (atom (history/empty-history session-id settings)))
+        audit-settings (update settings :captcha captcha/public-settings)
+        history (or history (atom (history/empty-history session-id audit-settings)))
         tools (conj (vec (or actions (actions/default-actions browser)))
                     actions/done-action)
         step-counter (atom 0)
@@ -100,6 +105,13 @@
           (when-not (session/runnable? session)
             (throw (ex-info "browser-use: session is not running"
                             {:status (session/status session)})))
+          (when-let [result (captcha/maybe-solve! (b/-state browser)
+                                                   (assoc (:captcha settings)
+                                                          :session session))]
+            (when-not (= :solved (:status result))
+              (throw (ex-info "browser-use: CAPTCHA awaits operator"
+                              {:type :captcha/pending
+                               :result (captcha/audit-result result)}))))
           {:messages [(model/-generate model
                                        (into [(msg/system (or system default-system-prompt))]
                                              messages)
@@ -170,7 +182,8 @@
   (let [session (or session (session/create-session {:id (or session-id "default")}))
         settings (agent-settings (merge (or settings {})
                                         (when-let [n (:max-steps opts)] {:max-steps n})))
-        history (or history (atom (history/empty-history (or session-id "default") settings)))
+        audit-settings (update settings :captcha captcha/public-settings)
+        history (or history (atom (history/empty-history (or session-id "default") audit-settings)))
         agent (build-agent (assoc opts :session session :history history :settings settings))
         first-msg (msg/user (str "Task: " task "\n\n"
                                  (b/state->prompt (b/-state browser))))
@@ -181,4 +194,4 @@
      :steps (count (:events out))
      :session session
      :history @history
-     :settings settings}))
+     :settings audit-settings}))
