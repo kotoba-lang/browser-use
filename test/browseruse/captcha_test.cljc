@@ -1,5 +1,5 @@
 (ns browseruse.captcha-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is]]
             [browseruse.captcha :as captcha]
             [browseruse.session :as session]))
 
