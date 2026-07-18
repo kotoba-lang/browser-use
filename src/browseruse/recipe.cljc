@@ -21,6 +21,9 @@
              {:do :wait-human :prompt \"Solve the CAPTCHA, then continue\"}
              {:do :click :match {:tag \"button\" :text \"Create new account\"}}]}"
   (:require [browseruse.browser :as b]
+            [browseruse.guardrail :as guardrail]
+            [browseruse.history :as history]
+            [browseruse.session :as session]
             [clojure.string :as str]))
 
 (defn- norm [s] (str/lower-case (str/trim (or s ""))))
@@ -75,29 +78,39 @@
     :screenshot {:as ..}                   capture a screenshot
     :wait-human {:prompt ..}               pause for the operator (CAPTCHA etc.)"
   [browser {:keys [url steps]}
-   {:keys [resolve-secret screenshot pause select check verbose]
+   {:keys [resolve-secret screenshot pause select check verbose settings session history]
     :or {resolve-secret (fn [_] (throw (ex-info "recipe: no :resolve-secret given" {})))
          screenshot (fn [_] nil)
          pause (fn [_] nil)
          select (fn [_ _] (throw (ex-info "recipe: :select step needs a :select opt fn (host capability)" {})))
          check (fn [_] (throw (ex-info "recipe: :check step needs a :check opt fn (host capability)" {})))}}]
-  (when url (b/-navigate! browser url))
-  (loop [remaining steps log []]
+  (let [settings (guardrail/policy settings)
+        session (or session (session/create-session {:id "recipe"}))
+        history (or history (atom (history/empty-history (:id session) settings)))]
+  (when url
+    (guardrail/assert-action! settings {:name "navigate" :input {:url url}})
+    (b/-navigate! browser url))
+  (loop [remaining steps log [] step-number 1]
     (if (empty? remaining)
-      {:ok true :log log :state (b/-state browser)}
+      {:ok true :log log :state (b/-state browser) :history @history :session session}
       (let [{:keys [do match value as prompt] :as step} (first remaining)
             els (:elements (b/-state browser))
             need-idx (#{:fill :click :assert :select :check} do)
             idx (when need-idx (match-index els match))]
+        (when-not (session/runnable? session)
+          (throw (ex-info "recipe: session is not running" {:status (session/status session)})))
+        (session/hook! session :before-step {:step step :step-number step-number})
         (when verbose (println "recipe:" do (or match "") (when as (str "→" as))))
         (cond
           (and need-idx (nil? idx))
           {:ok false :error (str "no element matched " (pr-str match) " for :" (clojure.core/name do))
-           :log log :state (b/-state browser)}
+           :log log :state (b/-state browser) :history @history :session session}
 
           :else
-          (let [result
-                (case do
+          (let [executed
+                (guardrail/execute
+                 settings {:name (clojure.core/name do) :input step}
+                 #(case do
                   :navigate (do (b/-navigate! browser (:url step)) {:do do :url (:url step)})
                   :fill (do (b/-input-text! browser idx (resolve-value value resolve-secret))
                             {:do do :index idx :secret? (boolean (and (map? value) (:secret value)))})
@@ -108,5 +121,15 @@
                   :assert {:do do :index idx :ok true}
                   :screenshot {:do do :as as :path (screenshot as)}
                   :wait-human {:do do :prompt prompt :resumed (boolean (pause prompt))}
-                  (throw (ex-info (str "recipe: unknown :do " (pr-str do)) {:step step})))]
-            (recur (rest remaining) (conj log result))))))))
+                  (throw (ex-info (str "recipe: unknown :do " (pr-str do)) {:step step}))))
+                result (:value executed)
+                _ (guardrail/assert-url! settings (:url (b/-state browser)))
+                action-result (history/->ActionResult
+                               step-number (clojure.core/name do)
+                               (guardrail/redact (dissoc step :value) (:sensitive-data settings))
+                               (guardrail/redact result (:sensitive-data settings))
+                               nil (:url (b/-state browser)) (:attempts executed)
+                               (:elapsed-ms executed) {:recipe? true})]
+            (swap! history history/append action-result)
+            (session/hook! session :after-step action-result)
+            (recur (rest remaining) (conj log result) (inc step-number)))))))))
