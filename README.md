@@ -119,6 +119,25 @@ Recipes can use `{:do :captcha :captcha {:mode :human}}`. Solver tokens are
 available only to `:apply-solution`; audit hooks and history receive a redacted
 result. CAPTCHA automation must only be used where the caller is authorized.
 
+### CapSolver adapter
+
+The JVM production adapter uses CapSolver's asynchronous token API:
+
+```clojure
+(require '[browseruse.capsolver :as capsolver]
+         '[browseruse.capsolver-http :as capsolver-http])
+
+(def solver
+  (capsolver/provider {:client-key (System/getenv "CAPSOLVER_API_KEY")
+                       :request! capsolver-http/request!}))
+```
+
+Supported mappings are reCAPTCHA v2/v3, hCaptcha, and Turnstile. DOM detection
+copies a public `data-sitekey` when present; otherwise provide `:site-key` in
+the challenge. CapSolver does not expose task cancellation, so timeout performs
+local abandonment. Run the credential-free example with
+`clojure -M:capsolver -m capsolver-dry-run`; it uses no network or API key.
+
 ## Mapping from upstream
 
 See [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) for

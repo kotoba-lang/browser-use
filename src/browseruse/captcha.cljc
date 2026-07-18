@@ -49,6 +49,8 @@
   (when-let [[element kind] (some (fn [el] (when-let [k (evidence-for el)] [el k])) elements)]
     {:id (str "captcha-" (or (:index element) "unindexed"))
      :type kind :url url :element-index (:index element)
+     :site-key (or (get-in element [:attrs :data-sitekey])
+                   (get-in element [:attrs "data-sitekey"]))
      :evidence :dom-indicator}))
 
 (defn audit-result
