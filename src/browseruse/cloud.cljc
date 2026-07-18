@@ -1,6 +1,9 @@
 (ns browseruse.cloud
   "Portable Browser Use Cloud v3 client. HTTP and sleeping are injected so the
-  client works in Clojure/CLJS and can be tested without credentials.")
+  client works in Clojure/CLJS and can be tested without credentials."
+  (:refer-clojure :exclude [run!])
+  (:require [clojure.string :as str]
+            [clojure.walk :as walk]))
 
 (def default-base-url "https://api.browser-use.com/api/v3")
 (def terminal-statuses #{"idle" "stopped" "timed_out" "error" :idle :stopped :timed-out :error})
@@ -23,6 +26,11 @@
        (or (contains? #{:get :delete} (:method request))
            (get-in request [:headers "Idempotency-Key"]))))
 
+(defn- redact-secret [value secret]
+  (walk/postwalk (fn [x]
+                   (if (string? x) (str/replace x secret "[REDACTED]") x))
+                 value))
+
 (defn- invoke! [client request]
   (let [request (-> (merge {:timeout-ms (:timeout-ms client)} request)
                     (assoc :headers (merge {"X-Browser-Use-API-Key" (:api-key client)
@@ -42,7 +50,7 @@
                            :method (:method request)
                            :path (:path request)
                            :attempts (inc attempt)
-                           :response (:body response)})))))))
+                           :response (redact-secret (:body response) (:api-key client))})))))))
 
 (defn create-session!
   "Create an idle session, run a task, or dispatch a follow-up with :sessionId.

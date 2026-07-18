@@ -18,7 +18,7 @@
                          {:status 200 :body {:sessions [] :total 0}}
                          {:status 200 :body {:id "s1" :status "running"}}
                          {:status 200 :body {:id "s1" :status "stopped"}}
-                         {:status 400 :body {:message "bad id"}}])
+                         {:status 400 :body {:message "server echoed secret-value"}}])
         calls (atom []) c (mock-client responses calls (atom []))]
     (is (= "live" (cloud/live-url (cloud/create-session! c {:keepAlive true}))))
     (is (= "s1" (:id (cloud/follow-up! c "s1" "continue" {}))))
@@ -31,6 +31,7 @@
     (try (cloud/get-session c "bad")
          (catch #?(:clj Exception :cljs js/Error) e
            (is (= 400 (:status (ex-data e))))
+           (is (= {:message "server echoed [REDACTED]"} (:response (ex-data e))))
            (is (not (re-find #"secret-value" (pr-str (ex-data e)))))))))
 
 (deftest retries-idempotent-requests-only
@@ -66,7 +67,7 @@
     (is (= true (get-in (nth @calls 4) [:query-params :includeUrls])))))
 
 (deftest raw-browser-and-profile-request-shapes
-  (let [responses (atom (repeat 10 {:status 200 :body {:id "resource"}}))
+  (let [responses (atom (vec (repeat 10 {:status 200 :body {:id "resource"}})))
         calls (atom []) c (mock-client responses calls (atom []))]
     (cloud/create-browser! c {:proxyCountryCode "jp" :enableRecording true})
     (cloud/get-browser c "b1")
