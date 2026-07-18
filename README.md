@@ -170,3 +170,7 @@ effective mode.
 
 These controls are configuration hardening, not a guarantee that automation is
 undetectable. CAPTCHA and managed anti-detect services are separate providers.
+
+Use the credential-safe [proxy/profile probe](docs/proxy-profile-probe.md) to
+verify observed IP, locale/timezone, and persistent cookie/localStorage state
+against either an authorized external endpoint or a deterministic local server.
