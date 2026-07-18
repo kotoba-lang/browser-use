@@ -14,6 +14,10 @@
                         {:local/root "../langgraph"}
                         io.github.kotoba-lang/langchain
                         {:local/root "../langchain"}}}
+  ;; JVM Cloud API transport and the safe live probe. The portable client keeps
+  ;; HTTP/JSON injected; this alias is the concrete java.net.http host.
+  :cloud {:extra-paths ["examples" "test-cloud"]
+          :extra-deps {cheshire/cheshire {:mvn/version "5.13.0"}}}
   ;; Real browser via Playwright — used by examples/yoro_visual_test.clj live mode
   ;; Model: Murakumo LiteLLM 127.0.0.1:4000 (ADR-2605215000 Murakumo-only invariant)
   ;; Fallback (Murakumo down): Ollama 127.0.0.1:11434 local inference
@@ -26,5 +30,5 @@
               :extra-deps {cheshire/cheshire {:mvn/version "5.13.0"}}}
   ;; clj-kondo as a Clojars lib (no Homebrew/system install needed).
   :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
-         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test"
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test" "test-cloud"
                      "--fail-level" "error"]}}}
