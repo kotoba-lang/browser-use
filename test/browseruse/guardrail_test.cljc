@@ -1,5 +1,5 @@
 (ns browseruse.guardrail-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is]]
             [browseruse.guardrail :as guardrail]))
 
 (deftest redaction-and-domain-boundary
