@@ -89,3 +89,18 @@
                                       :input {:direction "down"}}]})])]
     (is (thrown? #?(:clj Exception :cljs js/Error)
                  (agent/run {:model m :browser br :task "loop" :max-steps 4})))))
+
+(deftest structured-agent-settings-and-actions-per-step
+  (is (= 3 (:max-actions-per-step
+            (agent/agent-settings {:max-actions-per-step 3
+                                   :planner {:enabled? true}
+                                   :vision {:enabled? true}}))))
+  (is (thrown? #?(:clj Exception :cljs js/Error)
+               (agent/agent-settings {:max-actions-per-step 0})))
+  (let [br (b/mock-browser site "https://example.com")
+        m (model/mock-model
+           [(msg/ai "" {:tool-calls [{:id "1" :name "scroll" :input {:direction "down"}}
+                                      {:id "2" :name "scroll" :input {:direction "down"}}]})])]
+    (is (thrown-with-msg? #?(:clj Exception :cljs js/Error) #"max actions per step"
+                          (agent/run {:model m :browser br :task "bounded"
+                                      :settings {:max-actions-per-step 1}})))))
