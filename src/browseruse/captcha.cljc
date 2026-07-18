@@ -112,7 +112,7 @@
               (-cancel! provider job provider-opts)
               (throw (ex-info "browser-use: CAPTCHA solver timed out"
                               {:type :captcha/timeout :polls (dec poll)})))
-            (let [{:keys [status solution] :as result} (-poll! provider job provider-opts)]
+            (let [{:keys [status solution]} (-poll! provider job provider-opts)]
               (case status
                 :solved (do (when apply-solution (apply-solution solution challenge))
                             (let [r {:status :solved :method :external
