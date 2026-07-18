@@ -17,7 +17,7 @@
   ;; Real browser via Playwright — used by examples/yoro_visual_test.clj live mode
   ;; Model: Murakumo LiteLLM 127.0.0.1:4000 (ADR-2605215000 Murakumo-only invariant)
   ;; Fallback (Murakumo down): Ollama 127.0.0.1:11434 local inference
-  :playwright {:extra-paths ["examples"]
+  :playwright {:extra-paths ["examples" "test-playwright"]
                :extra-deps {com.microsoft.playwright/playwright {:mvn/version "1.44.0"}
                             clj-http/clj-http                  {:mvn/version "3.13.0"}
                             cheshire/cheshire                  {:mvn/version "5.13.0"}}}
