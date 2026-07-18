@@ -35,3 +35,4 @@
         (finally
           ((:close session))
           (is (= {:closed true} ((:close session)))))))))
+
