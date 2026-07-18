@@ -1,6 +1,7 @@
 (ns browseruse.playwright-browser-test
   (:require [browseruse.browser :as b]
             [browseruse.playwright-browser :as pw]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]))
 
 (def chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
@@ -10,8 +11,27 @@
     (is true "System Chromium unavailable; host smoke is platform-gated")
     (let [session (pw/playwright-session
                    "data:text/html,<title>Host</title><button onclick=\"console.log('clicked')\">Go</button>"
-                   {:executable-path chrome :viewport {:width 640 :height 480}})]
+                   {:executable-path chrome :viewport {:width 640 :height 480}
+                    :screen {:width 1280 :height 800}
+                    :user-agent "browser-use-clj-smoke/1"
+                    :locale "ja-JP" :timezone-id "Asia/Tokyo"
+                    :color-scheme :dark :device-scale-factor 1.0
+                    :proxy {:server "http://127.0.0.1:9" :bypass "*"
+                            :username "proxy-user" :password "proxy-test-secret"}
+                    :init-scripts ["window.__browserUseInit = 'ready'"]})]
       (try
+        (testing "fingerprint controls, init scripts and honest capabilities"
+          (is (= {:ua "browser-use-clj-smoke/1" :lang "ja-JP" :init "ready"}
+                 (b/-evaluate! (:browser session)
+                               "() => ({ua:navigator.userAgent,lang:navigator.language,init:window.__browserUseInit})"
+                               nil)))
+          (is (= :isolated (get-in session [:capabilities :connection-mode])))
+          (is (false? (get-in session [:capabilities :stealth :automation-undetectable?])))
+          (is (not (str/includes?
+                    (pr-str {:state (b/-state (:browser session))
+                             :events ((:events session))
+                             :capabilities (:capabilities session)})
+                    "proxy-test-secret"))))
         (testing "evaluate, viewport, screenshot bytes and telemetry"
           (is (= {:title "Host" :width 640}
                  (b/-evaluate! (:browser session) "() => ({title:document.title,width:innerWidth})" nil)))
@@ -35,4 +55,3 @@
         (finally
           ((:close session))
           (is (= {:closed true} ((:close session)))))))))
-

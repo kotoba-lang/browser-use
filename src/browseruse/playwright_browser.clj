@@ -1,14 +1,17 @@
 (ns browseruse.playwright-browser
   "Owned, daemon-free Playwright JVM host.
 
-  Every session owns its Playwright, Browser and BrowserContext.  `:close` is
-  idempotent and closes all three, making it suitable for `try`/`finally`."
-  (:require [browseruse.browser :as b])
+  Locally launched sessions own their Playwright/browser/context; CDP sessions
+  borrow pre-existing browser state. `:close` is idempotent, making it suitable
+  for `try`/`finally`."
+  (:require [browseruse.browser :as b]
+            [browseruse.browser-profile :as profile])
   (:import [com.microsoft.playwright Browser Browser$NewContextOptions
             BrowserContext BrowserContext$StorageStateOptions BrowserType$LaunchOptions
+            BrowserType$LaunchPersistentContextOptions BrowserType$ConnectOverCDPOptions
             Page Page$ScreenshotOptions Page$WaitForFunctionOptions
             Playwright]
-           [com.microsoft.playwright.options Cookie LoadState ScreenshotType]
+           [com.microsoft.playwright.options ColorScheme Cookie Geolocation LoadState Proxy ScreenshotType]
            [java.nio.file Path Paths]
            [java.util UUID]
            [java.util.function Consumer]))
@@ -74,6 +77,52 @@
 
 (defn- path [p] (Paths/get (str p) (make-array String 0)))
 
+(defn- proxy-option [{:keys [server bypass username password]}]
+  (when server
+    (cond-> (Proxy. server)
+      bypass (.setBypass bypass)
+      username (.setUsername username)
+      password (.setPassword password))))
+
+(defn- parse-color-scheme [v]
+  (when v (ColorScheme/valueOf (.toUpperCase (name v)))))
+
+(defn- geolocation-option [{:keys [latitude longitude accuracy]}]
+  (when (and (some? latitude) (some? longitude))
+    (cond-> (Geolocation. (double latitude) (double longitude))
+      accuracy (.setAccuracy (double accuracy)))))
+
+(defn- configure-context!
+  [opts {:keys [accept-downloads? viewport screen user-agent locale timezone-id
+                storage-state-path geolocation permissions color-scheme
+                device-scale-factor has-touch? mobile? extra-http-headers
+                ignore-https-errors? proxy]}]
+  (.setAcceptDownloads opts accept-downloads?)
+  (when viewport (.setViewportSize opts (int (:width viewport)) (int (:height viewport))))
+  (when screen (.setScreenSize opts (int (:width screen)) (int (:height screen))))
+  (when user-agent (.setUserAgent opts user-agent))
+  (when locale (.setLocale opts locale))
+  (when timezone-id (.setTimezoneId opts timezone-id))
+  (when storage-state-path (.setStorageStatePath opts (path storage-state-path)))
+  (when-let [g (geolocation-option geolocation)] (.setGeolocation opts g))
+  (when permissions (.setPermissions opts (mapv name permissions)))
+  (when-let [c (parse-color-scheme color-scheme)] (.setColorScheme opts c))
+  (when device-scale-factor (.setDeviceScaleFactor opts (double device-scale-factor)))
+  (when (some? has-touch?) (.setHasTouch opts (boolean has-touch?)))
+  (when (some? mobile?) (.setIsMobile opts (boolean mobile?)))
+  (when extra-http-headers (.setExtraHTTPHeaders opts extra-http-headers))
+  (when (some? ignore-https-errors?) (.setIgnoreHTTPSErrors opts (boolean ignore-https-errors?)))
+  (when-let [p (proxy-option proxy)] (.setProxy opts p))
+  opts)
+
+(defn- install-init-scripts! [^BrowserContext ctx scripts]
+  (doseq [script scripts]
+    (cond
+      (string? script) (.addInitScript ctx script)
+      (:content script) (.addInitScript ctx ^String (:content script))
+      (:path script) (.addInitScript ctx ^Path (path (:path script)))))
+  ctx)
+
 (defn- cookie->map [^Cookie c]
   (cond-> {:name (.-name c) :value (.-value c) :domain (.-domain c) :path (.-path c)
            :expires (.-expires c) :http-only (.-httpOnly c) :secure (.-secure c)
@@ -94,28 +143,69 @@
 (defn playwright-session
   "Launch an isolated Chromium session.
 
-  Options: `:headless?`, `:timeout`, `:viewport {:width :height}`,
-  `:user-agent`, `:locale`, `:timezone-id`, `:storage-state-path`, and
-  `:accept-downloads?`. The returned capability functions are synchronous.
+  Options include `:proxy {:server :bypass :username :password}`, fingerprint
+  controls (`:viewport`, `:screen`, `:user-agent`, `:locale`, `:timezone-id`,
+  `:geolocation`, `:permissions`, `:color-scheme`, `:device-scale-factor`,
+  `:has-touch?`, `:mobile?`, `:extra-http-headers`), `:init-scripts`,
+  `:user-data-dir` for a persistent profile, or `:cdp-url` to attach.
+  Connection modes are mutually exclusive. The returned functions are synchronous.
   Call `:close` from `finally`; it is idempotent."
   ([start-url] (playwright-session start-url {}))
-  ([start-url {:keys [headless? timeout viewport user-agent locale timezone-id
-                      storage-state-path accept-downloads? executable-path channel]
-               :or {headless? true timeout 30000 accept-downloads? true}}]
-   (let [pw (Playwright/create)
-         launch-opts (doto (BrowserType$LaunchOptions.) (.setHeadless headless?))
+  ([start-url {:keys [headless? timeout accept-downloads? executable-path channel
+                      proxy user-data-dir cdp-url cdp-headers init-scripts launch-args]
+               :or {headless? true timeout 30000 accept-downloads? true}
+               :as supplied-opts}]
+   (let [opts (profile/validate-profile
+               (merge {:headless? headless? :timeout timeout
+                       :accept-downloads? accept-downloads?}
+                      supplied-opts))
+         pw (Playwright/create)
+         chromium (.chromium pw)
+         launch-opts (doto (BrowserType$LaunchOptions.)
+                       (.setHeadless headless?)
+                       (.setTimeout (double timeout)))
          _ (when executable-path (.setExecutablePath launch-opts (path executable-path)))
          _ (when channel (.setChannel launch-opts channel))
-         raw-browser (-> pw .chromium (.launch launch-opts))
-         context-opts (doto (Browser$NewContextOptions.)
-                        (.setAcceptDownloads accept-downloads?))
-         _ (when viewport (.setViewportSize context-opts (int (:width viewport)) (int (:height viewport))))
-         _ (when user-agent (.setUserAgent context-opts user-agent))
-         _ (when locale (.setLocale context-opts locale))
-         _ (when timezone-id (.setTimezoneId context-opts timezone-id))
-         _ (when storage-state-path (.setStorageStatePath context-opts (path storage-state-path)))
-         ctx (.newContext ^Browser raw-browser context-opts)
-         page (.newPage ^BrowserContext ctx)
+         _ (when launch-args (.setArgs launch-opts (mapv str launch-args)))
+         _ (when-let [p (proxy-option proxy)] (.setProxy launch-opts p))
+         connection
+         (cond
+           cdp-url
+           (let [cdp-opts (doto (BrowserType$ConnectOverCDPOptions.)
+                            (.setTimeout (double timeout)))
+                 _ (when cdp-headers (.setHeaders cdp-opts cdp-headers))
+                 browser (.connectOverCDP chromium cdp-url cdp-opts)
+                 existing (first (.contexts browser))
+                 context (or existing
+                             (.newContext browser
+                                          (configure-context! (Browser$NewContextOptions.) opts)))]
+             {:browser browser :context context :owns-browser? false
+              :owns-context? (nil? existing) :mode :cdp})
+
+           user-data-dir
+           (let [persistent-opts (doto (BrowserType$LaunchPersistentContextOptions.)
+                                   (.setHeadless headless?)
+                                   (.setTimeout (double timeout)))
+                 _ (when executable-path (.setExecutablePath persistent-opts (path executable-path)))
+                 _ (when channel (.setChannel persistent-opts channel))
+                 _ (when launch-args (.setArgs persistent-opts (mapv str launch-args)))
+                 context (.launchPersistentContext
+                          chromium (path user-data-dir)
+                          (configure-context! persistent-opts opts))]
+             {:browser (.browser context) :context context :owns-browser? false
+              :owns-context? true :mode :persistent-profile})
+
+           :else
+           (let [browser (.launch chromium launch-opts)
+                 context (.newContext browser
+                                      (configure-context! (Browser$NewContextOptions.) opts))]
+             {:browser browser :context context :owns-browser? true
+              :owns-context? true :mode :isolated}))
+         raw-browser ^Browser (:browser connection)
+         ctx ^BrowserContext (:context connection)
+         _ (install-init-scripts! ctx init-scripts)
+         existing-page (first (.pages ctx))
+         page (or existing-page (.newPage ctx))
          page* (atom page)
          active-id* (atom nil)
          ops* (atom nil)
@@ -145,6 +235,7 @@
          {:browser (make-browser page* ops*)
           :page page*
           :context ctx
+          :capabilities (profile/capability-report opts)
           :tab-id active-id*
           :tabs (fn [] (mapv (fn [[id ^Page p]] {:id id :url (.url p) :title (.title p)
                                                   :active? (identical? p @page*)}) @tabs*))
@@ -247,8 +338,10 @@
           :events (fn [] (update @events* :downloads #(mapv (fn [x] (dissoc x :download)) %)))
           :close (fn []
                    (when (compare-and-set! closed? false true)
-                     (try (.close ctx) (catch Throwable _))
-                     (try (.close raw-browser) (catch Throwable _))
+                     (when (:owns-context? connection)
+                       (try (.close ctx) (catch Throwable _)))
+                     (when (:owns-browser? connection)
+                       (try (.close raw-browser) (catch Throwable _)))
                      (try (.close pw) (catch Throwable _)))
                    {:closed true})}]
      (.setDefaultTimeout page timeout)

@@ -136,3 +136,14 @@ clojure -Sdeps '{:paths ["src" "examples"]
 ```
 
 Workspace development against local checkouts: `clojure -M:dev:test`.
+
+## Proxy, profiles, CDP, and fingerprint controls
+
+The JVM Playwright host supports `:proxy` (`:server`, `:bypass`, `:username`,
+`:password`), `:user-data-dir` persistent profiles, `:cdp-url` attachment,
+`:channel`/`:executable-path`, context fingerprint controls, and document-start
+`:init-scripts`. Inspect `(:capabilities session)` for the credential-redacted
+effective mode.
+
+These controls are configuration hardening, not a guarantee that automation is
+undetectable. CAPTCHA and managed anti-detect services are separate providers.
