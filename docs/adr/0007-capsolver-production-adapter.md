@@ -1,4 +1,4 @@
-# ADR 0006: CapSolver production adapter
+# ADR-0007: CapSolver production adapter
 
 - Status: Accepted
 - Date: 2026-07-18
