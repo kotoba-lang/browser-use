@@ -2,7 +2,8 @@
  ;; Built on langgraph-clj (graph agent loop) which brings langchain-clj
  ;; (ChatModel / tools / Datomic-API store). Both are zero-third-party-dep .cljc.
  :deps {io.github.kotoba-lang/langgraph
-        {:local/root "../langgraph"}}
+        {:git/url "https://github.com/kotoba-lang/langgraph.git"
+         :git/sha "577a59a9d5eb3ef90b81342f4673973f481ff7f4"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
