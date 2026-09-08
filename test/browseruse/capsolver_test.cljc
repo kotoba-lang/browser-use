@@ -1,7 +1,7 @@
 (ns browseruse.capsolver-test
   (:require [browseruse.captcha :as captcha]
             [browseruse.capsolver :as capsolver]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is testing]]))
 
 (deftest maps-supported-token-tasks

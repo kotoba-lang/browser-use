@@ -1,5 +1,5 @@
 (ns browseruse.guardrail
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def defaults
   {:allowed-domains [] :sensitive-data {} :max-action-retries 0
@@ -24,9 +24,9 @@
 
 (defn allowed-url? [allowed-domains url]
   (or (empty? allowed-domains)
-      (let [host (some-> (url-domain url) str/lower-case)]
+      (let [host (some-> (url-domain url) str/lower)]
         (boolean (some (fn [domain]
-                         (let [domain (str/lower-case (str domain))]
+                         (let [domain (str/lower (str domain))]
                            (or (= host domain) (str/ends-with? host (str "." domain)))))
                        allowed-domains)))))
 

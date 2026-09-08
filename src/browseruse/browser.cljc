@@ -1,6 +1,6 @@
 (ns browseruse.browser
   "Portable browser capability contracts and deterministic mock host."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 ;; Kept deliberately stable: existing browser hosts only need this protocol.
 (defprotocol IBrowser

@@ -5,7 +5,7 @@
    artifact on the same inputs and asserts their projections agree.
    :parity-test-ns browseruse.history-parity-test"
   (:require [clojure.test :refer [deftest is]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.java.shell :as shell]
             [browseruse.history :as hist]))
 
