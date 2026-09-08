@@ -7,7 +7,7 @@
   (:require [browseruse.browser-profile :as profile]
             [browseruse.playwright-browser :as playwright]
             [clojure.edn :as edn]
-            [clojure.string :as str])
+            [kotoba.lang.text :as str])
   (:import [com.sun.net.httpserver HttpExchange HttpHandler HttpServer]
            [java.net InetSocketAddress]
            [java.nio.charset StandardCharsets]

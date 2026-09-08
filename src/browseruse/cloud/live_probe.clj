@@ -2,7 +2,7 @@
   "Bounded, opt-in Browser Use Cloud v3 connectivity probe."
   (:require [browseruse.cloud :as cloud]
             [browseruse.cloud.http :as http]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.walk :as walk]))
 
 (def defaults
@@ -35,7 +35,7 @@
           "--record" (recur (assoc opts :enable-recording true) (next args))
           "--task" (recur (assoc opts :task value) more)
           "--model" (recur (assoc opts :model value) more)
-          "--proxy-country" (recur (assoc opts :proxy-country-code (some-> value str/lower-case)) more)
+          "--proxy-country" (recur (assoc opts :proxy-country-code (some-> value str/lower)) more)
           "--max-cost-usd" (recur (assoc opts :max-cost-usd (parse-decimal flag value)) more)
           "--timeout-seconds" (recur (assoc opts :timeout-seconds (parse-integer flag value)) more)
           "--poll-ms" (recur (assoc opts :poll-ms (parse-integer flag value)) more)

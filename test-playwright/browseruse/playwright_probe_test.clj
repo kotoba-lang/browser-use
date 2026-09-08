@@ -1,6 +1,6 @@
 (ns browseruse.playwright-probe-test
   (:require [browseruse.playwright-probe :as probe]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is testing]])
   (:import [java.nio.file Files]
            [java.nio.file.attribute FileAttribute]))

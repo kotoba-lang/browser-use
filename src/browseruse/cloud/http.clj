@@ -4,7 +4,7 @@
   The returned function accepts the portable client's request map. It never
   logs headers or bodies; callers receive only status and decoded response."
   (:require [cheshire.core :as json]
-            [clojure.string :as str])
+            [kotoba.lang.text :as str])
   (:import [java.net URI URLEncoder]
            [java.net.http HttpClient HttpClient$Redirect HttpRequest
             HttpRequest$BodyPublishers HttpResponse$BodyHandlers]
@@ -53,7 +53,7 @@
                         (HttpRequest$BodyPublishers/ofString
                          (json/generate-string body)))
             request (-> builder
-                        (.method (str/upper-case (name method)) publisher)
+                        (.method (str/upper (name method)) publisher)
                         (.build))
             response (.send client request (HttpResponse$BodyHandlers/ofString))]
         {:status (.statusCode response)

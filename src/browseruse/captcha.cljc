@@ -2,7 +2,7 @@
   "Portable CAPTCHA orchestration. Detection, operator hand-off and external
   solving are deliberately separate. Provider credentials belong inside the
   adapter implementation and must never be passed in challenge/options maps."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [browseruse.session :as session]))
 
 (defprotocol CaptchaProvider
@@ -32,7 +32,7 @@
                [:mode :timeout-ms :poll-interval-ms :max-polls :detect?]))
 
 (defn- evidence-for [{:keys [tag text attrs]}]
-  (let [haystack (str/lower-case
+  (let [haystack (str/lower
                   (str tag " " text " " (:id attrs) " " (:name attrs) " "
                        (:title attrs) " " (:src attrs) " " (:class attrs)))]
     (cond

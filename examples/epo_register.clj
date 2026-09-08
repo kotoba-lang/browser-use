@@ -24,7 +24,7 @@
   (:require [browseruse.playwright-browser :as pw]
             [browseruse.browser :as b]
             [browseruse.recipe :as recipe]
-            [clojure.string :as str]))
+            [kotoba.lang.text :as str]))
 
 (def register-url "https://developers.epo.org/user/register")
 

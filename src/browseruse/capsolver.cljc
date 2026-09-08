@@ -4,7 +4,7 @@
   HTTP is injected to keep this namespace portable. The client key is closed
   over by the provider and is never included in jobs, results or exceptions."
   (:require [browseruse.captcha :as captcha]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.walk :as walk]))
 
 (def default-base-url "https://api.capsolver.com")

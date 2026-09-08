@@ -2,7 +2,7 @@
   "Portable Browser Use Cloud v3 client. HTTP and sleeping are injected so the
   client works in Clojure/CLJS and can be tested without credentials."
   (:refer-clojure :exclude [run!])
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [clojure.walk :as walk]))
 
 (def default-base-url "https://api.browser-use.com/api/v3")

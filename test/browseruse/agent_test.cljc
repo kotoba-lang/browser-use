@@ -1,6 +1,6 @@
 (ns browseruse.agent-test
   (:require [clojure.test :refer [deftest is testing]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [browseruse.browser :as b]
             [browseruse.actions :as actions]
             [browseruse.agent :as agent]

@@ -3,7 +3,7 @@
 
   `:stealth` means explicit fingerprint controls only.  It is not a promise
   that automation is undetectable and does not bypass access controls."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (def ^:private secret-keys #{:password :authorization :proxy-authorization})
 

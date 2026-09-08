@@ -15,7 +15,7 @@
     clojure -A:playwright -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-live!)\"
 
   Inference route: Murakumo LiteLLM 127.0.0.1:4000 (ADR-2605215000 — Murakumo-only)."
-  (:require [browseruse.browser :as b]
+  (:require [kotoba.lang.text] [browseruse.browser :as b]
             [browseruse.agent  :as agent]
             [langchain.model   :as model]
             [langchain.message :as msg]
@@ -134,8 +134,8 @@
     (println "  result:" result)
     (println "  visited:" (sort visited-urls))
     (assert done "agent should complete")
-    (assert (some #(clojure.string/includes? % "search")  visited-urls))
-    (assert (some #(clojure.string/includes? % "notifs")  visited-urls))
+    (assert (some #(kotoba.lang.text/includes? % "search")  visited-urls))
+    (assert (some #(kotoba.lang.text/includes? % "notifs")  visited-urls))
     (println "  ✓ PASS")))
 
 ;; ──────────────────────────────────────────────────────────────────────

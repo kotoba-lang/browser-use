@@ -25,9 +25,9 @@
             [browseruse.captcha :as captcha]
             [browseruse.history :as history]
             [browseruse.session :as session]
-            [clojure.string :as str]))
+            [kotoba.lang.text :as str]))
 
-(defn- norm [s] (str/lower-case (str/trim (or s ""))))
+(defn- norm [s] (str/lower (str/trim (or s ""))))
 
 (defn match-index
   "Resolve a semantic matcher to the index of the first live element satisfying
