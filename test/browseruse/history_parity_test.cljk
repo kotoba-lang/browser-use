@@ -1,5 +1,5 @@
 (ns browseruse.history-parity-test
-  "Parity test for the kotoba migration of src/browseruse/history.cljc
+  "Parity test for the kotoba migration of src/browseruse/history.cljk
    (see src/browseruse/history.kotoba, ADR-2608261100).
    Runs the original JVM .cljc functions and the compiled js-browser
    artifact on the same inputs and asserts their projections agree.

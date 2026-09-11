@@ -1,5 +1,5 @@
 (ns browseruse.history
-  ;; Parity slice of src/browseruse/history.cljc (ADR-2608261100):
+  ;; Parity slice of src/browseruse/history.cljk (ADR-2608261100):
   ;; portable pure classification. The original defrecords
   ;; (ActionResult / AgentHistory) are represented as documents with the
   ;; same keys; `actions` is a document-vector where the original used a

@@ -26,8 +26,8 @@ action, budget, or operator policies.
 
 ## Evidence
 
-- `test/browseruse/capsolver_test.cljc`: task mapping, request contracts,
+- `test/browseruse/capsolver_test.cljk`: task mapping, request contracts,
   polling, local cancellation, and secret-redaction tests.
-- `test/browseruse/captcha_test.cljc`: DOM `data-sitekey` extraction.
-- `examples/capsolver_dry_run.clj`: credential-free request-shape example.
+- `test/browseruse/captcha_test.cljk`: DOM `data-sitekey` extraction.
+- `examples/capsolver_dry_run.cljk`: credential-free request-shape example.
 - CapSolver official `createTask`, `getTaskResult`, and Turnstile task docs.
