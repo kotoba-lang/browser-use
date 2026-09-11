@@ -3,7 +3,7 @@
 The command is non-networked and non-billable unless `--execute` is present.
 
 ```bash
-clojure -M:cloud -m browseruse.cloud.live-probe
+kbb -M:cloud -m browseruse.cloud.live-probe
 ```
 
 Review the printed endpoint, task, USD ceiling, timeout, and cleanup policy.
@@ -13,7 +13,7 @@ arguments, shell tracing, or logs:
 ```bash
 read -rs BROWSER_USE_API_KEY
 export BROWSER_USE_API_KEY
-clojure -M:cloud -m browseruse.cloud.live-probe \
+kbb -M:cloud -m browseruse.cloud.live-probe \
   --execute \
   --task "Open https://example.com and return only the page title." \
   --model bu-mini \

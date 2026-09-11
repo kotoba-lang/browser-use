@@ -21,8 +21,8 @@ bypass. Managed anti-detect infrastructure remains a provider capability.
 
 ## Evidence
 
-- `clojure -M:test`
-- `clojure -M:lint`
-- `clojure -M:playwright:test`
+- `kbb -M:test`
+- `kbb -M:lint`
+- `kbb -M:playwright:test`
 - `browseruse.browser-profile/capability-report` reports the effective boundary
   without proxy passwords.

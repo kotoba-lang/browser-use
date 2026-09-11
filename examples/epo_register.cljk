@@ -7,7 +7,7 @@
   Built for hirameki's live patent ingest (etzhayyim ADR-2606212200): EPO OPS is
   the no-ID.me, free 'Non-paying' tier (3.5 GB/week) → Consumer Key + Secret.
 
-    clojure -M:dev:playwright -e \"(require 'epo-register) (epo-register/-main)\"
+    kbb -M:dev:playwright -e \"(require 'epo-register) (epo-register/-main)\"
 
   The recipe auto-fills every field (username/email/password/name/country/
   Non-paying tier/org/purpose + the two consent checkboxes); the password comes
