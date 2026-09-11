@@ -40,9 +40,9 @@ and must comply with the target service's terms and applicable law.
 
 ## Evidence
 
-- `test/browseruse/captcha_test.cljc` covers detection, session pause/resume,
+- `test/browseruse/captcha_test.cljk` covers detection, session pause/resume,
   redacted audit events, bounded polling, timeout cancellation and settings
   sanitization.
-- `test/browseruse/recipe_test.cljc` covers an end-to-end human hand-off recipe.
+- `test/browseruse/recipe_test.cljk` covers an end-to-end human hand-off recipe.
 - Portable tests and clj-kondo lint are CI gates.
 
