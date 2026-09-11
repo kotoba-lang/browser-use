@@ -28,7 +28,7 @@ explicitly executes the runbook. CI remains credential-free and non-billable.
 
 ## Evidence
 
-- `clojure -M:cloud -m browseruse.cloud.live-probe` prints a dry-run plan.
-- `clojure -M:cloud:test -d test -d test-cloud`
+- `kbb -M:cloud -m browseruse.cloud.live-probe` prints a dry-run plan.
+- `kbb -M:cloud:test -d test -d test-cloud`
   verifies HTTP/JSON encoding, no-key failure, budget validation, and cleanup
   after a simulated polling failure.

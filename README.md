@@ -140,7 +140,7 @@ Supported mappings are reCAPTCHA v2/v3, hCaptcha, and Turnstile. DOM detection
 copies a public `data-sitekey` when present; otherwise provide `:site-key` in
 the challenge. CapSolver does not expose task cancellation, so timeout performs
 local abandonment. Run the credential-free example with
-`clojure -M:capsolver -m capsolver-dry-run`; it uses no network or API key.
+`kbb -M:capsolver -m capsolver-dry-run`; it uses no network or API key.
 
 ## Mapping from upstream
 
@@ -151,14 +151,14 @@ Controller/Registry, agent loop, done action, history).
 ## Tests / example
 
 ```sh
-clojure -M:test     # 4 tests, 15 assertions
-clojure -Sdeps '{:paths ["src" "examples"]
+kbb -M:test     # 4 tests, 15 assertions
+kbb -Sdeps '{:paths ["src" "examples"]
                  :deps {io.github.com-junkawasaki/langgraph-clj
                         {:git/tag "v0.2.0" :git/sha "133740f"}}}' \
         -M -e "(require 'shop-agent) (shop-agent/-main)"
 ```
 
-Workspace development against local checkouts: `clojure -M:dev:test`.
+Workspace development against local checkouts: `kbb -M:dev:test`.
 
 ## Proxy, profiles, CDP, and fingerprint controls
 

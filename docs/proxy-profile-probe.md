@@ -22,7 +22,7 @@ Create a private config file outside the repository:
 Validate configuration without opening a browser or contacting the proxy:
 
 ```sh
-clojure -M:playwright-probe /absolute/path/to/probe.edn
+kbb -M:playwright-probe /absolute/path/to/probe.edn
 ```
 
 Inspect the credential-redacted plan, then change `:dry-run?` to `false` for an
@@ -36,5 +36,5 @@ to loopback and provides a local JSON endpoint. The Playwright test suite uses
 it without external traffic:
 
 ```sh
-clojure -M:playwright:test -n browseruse.playwright-probe-test
+kbb -M:playwright:test -n browseruse.playwright-probe-test
 ```

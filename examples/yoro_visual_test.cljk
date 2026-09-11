@@ -6,13 +6,13 @@
     2. Live          — playwright-browser + Murakumo LiteLLM (needs running dev server)
 
   Run offline:
-    clojure -Sdeps '{:paths [\"src\" \"examples\"]
+    kbb -Sdeps '{:paths [\"src\" \"examples\"]
                     :deps {io.github.com-junkawasaki/langgraph-clj
                            {:git/tag \"v0.2.0\" :git/sha \"133740f\"}}}' \\
             -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-all!)\"
 
   Run live (requires: npm run dev inside cljs/, Playwright dep, Murakumo :4000):
-    clojure -A:playwright -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-live!)\"
+    kbb -A:playwright -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-live!)\"
 
   Inference route: Murakumo LiteLLM 127.0.0.1:4000 (ADR-2605215000 — Murakumo-only)."
   (:require [kotoba.lang.text] [browseruse.browser :as b]
@@ -317,16 +317,16 @@
   (ADR-2605215000); this fallback is approved for local dev only.
 
   Start the dev server first:
-    cd 60-apps/.../cljs && npx shadow-cljs watch app
+    cd 60-apps/.../cljs && amu compile --target wasm32-browser app
 
   Then run:
-    clojure -A:playwright -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-live!)\""
+    kbb -A:playwright -M -e \"(require 'yoro-visual-test) (yoro-visual-test/run-live!)\""
   []
   (println "=== yoro visual tests (LIVE — Playwright + Ollama) ===")
   (let [m       (ollama-model)
         browser (live-browser "http://localhost:8700/index.html" {:headless? true})]
     (if-not browser
-      (println "ERROR: Playwright browser unavailable — run with clojure -A:playwright")
+      (println "ERROR: Playwright browser unavailable — run with kbb -A:playwright")
       (do
         (live-test-home-feed!  browser m)
         (live-test-auth-modal! browser m)
