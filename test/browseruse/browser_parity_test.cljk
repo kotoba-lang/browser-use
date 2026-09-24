@@ -1,5 +1,5 @@
 (ns browseruse.browser-parity-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [browseruse.actions :as actions]
             [browseruse.browser :as b]))
 

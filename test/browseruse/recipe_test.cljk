@@ -1,5 +1,5 @@
 (ns browseruse.recipe-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [browseruse.browser :as b]
             [browseruse.recipe :as recipe]))
 

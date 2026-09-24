@@ -2,7 +2,7 @@
   (:require [browseruse.browser :as b]
             [browseruse.playwright-browser :as pw]
             [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]))
+            [kotoba.test :refer [deftest is testing]]))
 
 (def chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 
