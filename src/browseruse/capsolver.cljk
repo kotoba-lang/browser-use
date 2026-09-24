@@ -5,7 +5,7 @@
   over by the provider and is never included in jobs, results or exceptions."
   (:require [browseruse.captcha :as captcha]
             [kotoba.lang.text :as str]
-            [clojure.walk :as walk]))
+            [kotoba.lang.coll :as walk]))
 
 (def default-base-url "https://api.capsolver.com")
 
