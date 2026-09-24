@@ -6,7 +6,7 @@
   provided here for CI and pre-flight verification."
   (:require [browseruse.browser-profile :as profile]
             [browseruse.playwright-browser :as playwright]
-            [clojure.edn :as edn]
+            [kotoba.lang.edn :as edn]
             [kotoba.lang.text :as str])
   (:import [com.sun.net.httpserver HttpExchange HttpHandler HttpServer]
            [java.net InetSocketAddress]
