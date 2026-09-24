@@ -2,7 +2,7 @@
   (:require [browseruse.captcha :as captcha]
             [browseruse.capsolver :as capsolver]
             [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]))
+            [kotoba.test :refer [deftest is testing]]))
 
 (deftest maps-supported-token-tasks
   (is (= {:type "ReCaptchaV2TaskProxyLess" :websiteURL "https://site.test"

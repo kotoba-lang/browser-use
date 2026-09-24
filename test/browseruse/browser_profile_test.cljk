@@ -1,6 +1,6 @@
 (ns browseruse.browser-profile-test
   (:require [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [browseruse.browser-profile :as profile]))
 
 (deftest proxy-validation-and-redaction

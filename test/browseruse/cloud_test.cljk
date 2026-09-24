@@ -1,5 +1,5 @@
 (ns browseruse.cloud-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [browseruse.cloud :as cloud]))
 
 (defn mock-client [responses calls sleeps]

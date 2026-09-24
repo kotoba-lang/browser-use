@@ -1,5 +1,5 @@
 (ns browseruse.agent-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.lang.text :as str]
             [browseruse.browser :as b]
             [browseruse.actions :as actions]
