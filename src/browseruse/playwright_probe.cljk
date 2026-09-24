@@ -4,13 +4,12 @@
   The probe deliberately reports only credential-redacted configuration.  A
   caller may use an external IP echo page, or the deterministic local server
   provided here for CI and pre-flight verification."
-  (:require [browseruse.browser-profile :as profile]
+  (:require [kotoba.bytes :as kbytes] [browseruse.browser-profile :as profile]
             [browseruse.playwright-browser :as playwright]
             [kotoba.lang.edn :as edn]
             [kotoba.lang.text :as str])
   (:import [com.sun.net.httpserver HttpExchange HttpHandler HttpServer]
            [java.net InetSocketAddress]
-           [java.nio.charset StandardCharsets]
            [java.util UUID]))
 
 (def ^:private probe-script
@@ -102,7 +101,7 @@
   ([] (start-deterministic-server! {:ip "127.0.0.1"}))
   ([payload]
    (let [server (HttpServer/create (InetSocketAddress. "127.0.0.1" 0) 0)
-         body (.getBytes (str "{\"ip\":\"" (:ip payload) "\"}") StandardCharsets/UTF_8)
+         body (kbytes/utf8-bytes (str "{\"ip\":\"" (:ip payload) "\"}"))
          handler (reify HttpHandler
                    (^void handle [_ ^HttpExchange exchange]
                      (try

@@ -3,7 +3,7 @@
   client works in Clojure/CLJS and can be tested without credentials."
   (:refer-clojure :exclude [run!])
   (:require [kotoba.lang.text :as str]
-            [clojure.walk :as walk]))
+            [kotoba.lang.coll :as walk]))
 
 (def default-base-url "https://api.browser-use.com/api/v3")
 (def terminal-statuses #{"idle" "stopped" "timed_out" "error" :idle :stopped :timed-out :error})

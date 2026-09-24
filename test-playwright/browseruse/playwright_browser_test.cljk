@@ -1,5 +1,5 @@
 (ns browseruse.playwright-browser-test
-  (:require [browseruse.browser :as b]
+  (:require [kotoba.io :as kio] [browseruse.browser :as b]
             [browseruse.playwright-browser :as pw]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]))
@@ -7,7 +7,7 @@
 (def chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 
 (deftest owned-session-smoke
-  (if-not (.exists (java.io.File. chrome))
+  (if-not (kio/exists? (kio/file chrome))
     (is true "System Chromium unavailable; host smoke is platform-gated")
     (let [session (pw/playwright-session
                    "data:text/html,<title>Host</title><button onclick=\"console.log('clicked')\">Go</button>"

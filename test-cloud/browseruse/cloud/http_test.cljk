@@ -1,12 +1,12 @@
 (ns browseruse.cloud.http-test
-  (:require [browseruse.cloud.http :as http]
+  (:require [kotoba.bytes :as kbytes] [browseruse.cloud.http :as http]
             [cheshire.core :as json]
             [kotoba.test :refer [deftest is]])
   (:import [com.sun.net.httpserver HttpExchange HttpHandler HttpServer]
            [java.net InetSocketAddress]))
 
 (defn- respond! [^HttpExchange exchange status body]
-  (let [bytes (.getBytes body "UTF-8")]
+  (let [bytes (kbytes/utf8-bytes body)]
     (.sendResponseHeaders exchange status (alength bytes))
     (with-open [out (.getResponseBody exchange)] (.write out bytes))))
 

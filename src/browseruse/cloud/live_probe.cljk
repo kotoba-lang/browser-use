@@ -3,7 +3,7 @@
   (:require [browseruse.cloud :as cloud]
             [browseruse.cloud.http :as http]
             [kotoba.lang.text :as str]
-            [clojure.walk :as walk]))
+            [kotoba.lang.coll :as walk]))
 
 (def defaults
   {:execute? false
