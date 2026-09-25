@@ -1,10 +1,10 @@
 (ns browseruse.browser-profile-test
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.lang.error :as kerror] [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
             [browseruse.browser-profile :as profile]))
 
 (deftest proxy-validation-and-redaction
-  (is (thrown? clojure.lang.ExceptionInfo
+  (is (thrown? kerror/ExceptionInfo
                (profile/validate-profile {:proxy {:server "x" :username "u"}})))
   (let [report (profile/capability-report
                 {:proxy {:server "http://proxy:8080" :bypass "localhost"
@@ -16,7 +16,7 @@
 
 (deftest connection-modes-and-honest-stealth-report
   (testing "incompatible ownership modes fail before launching"
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? kerror/ExceptionInfo
                  (profile/validate-profile {:cdp-url "http://localhost:9222"
                                             :user-data-dir "/tmp/profile"}))))
   (let [report (profile/capability-report {:user-data-dir "/tmp/profile"

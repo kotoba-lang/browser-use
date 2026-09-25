@@ -2,6 +2,9 @@
  ;; Built on langgraph-clj (graph agent loop) which brings langchain-clj
  ;; (ChatModel / tools / Datomic-API store). Both are zero-third-party-dep .cljc.
  :deps {
+        ;; kotoba.lang.error replaced clojure.lang.ExceptionInfo here (2026-09-25).
+        ;; An explicit floor: tools.deps takes the NEWEST sha it is shown.
+        io.github.kotoba-lang/error {:git/sha "838dec56c9a5b74f9eec825a2fb28bda157f8cd3"}
         ;; kotoba.http.form-urlencoded replaced java.net.URLEncoder/URLDecoder here
         ;; (2026-09-24). An explicit floor: tools.deps takes the NEWEST sha it is shown.
         io.github.kotoba-lang/http-parse-url {:git/sha "8ad2f9680111e50168b4078a64601dc9296158d7"}
