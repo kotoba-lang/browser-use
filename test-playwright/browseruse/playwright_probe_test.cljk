@@ -1,5 +1,5 @@
 (ns browseruse.playwright-probe-test
-  (:require [kotoba.io :as kio] [browseruse.playwright-probe :as probe]
+  (:require [kotoba.lang.error :as kerror] [kotoba.io :as kio] [browseruse.playwright-probe :as probe]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]))
 
@@ -17,7 +17,7 @@
     (is (= "[REDACTED]" (get-in result [:plan :capabilities :effective-config :proxy :password])))
     (is (not (str/includes? (pr-str result) "probe-secret"))))
   (testing "credentials embedded in URLs are rejected before they can be reported"
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? kerror/ExceptionInfo
                  (probe/validate-probe-config
                   {:probe-url "https://example.test/ip"
                    :user-data-dir "/tmp/profile"

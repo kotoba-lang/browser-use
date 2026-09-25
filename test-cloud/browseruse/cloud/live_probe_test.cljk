@@ -1,5 +1,5 @@
 (ns browseruse.cloud.live-probe-test
-  (:require [browseruse.cloud :as cloud]
+  (:require [kotoba.lang.error :as kerror] [browseruse.cloud :as cloud]
             [browseruse.cloud.http :as http]
             [browseruse.cloud.live-probe :as probe]
             [kotoba.test :refer [deftest is]]))
@@ -16,7 +16,7 @@
     (is (:execute? opts))
     (is (= 0.20M (:max-cost-usd opts)))
     (is (= "jp" (:proxy-country-code opts)))
-    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"at most 1.00"
+    (is (thrown-with-msg? kerror/ExceptionInfo #"at most 1.00"
                           (probe/validate! (assoc opts :max-cost-usd 1.01M))))))
 
 (deftest missing-key-fails-before-network
@@ -35,7 +35,7 @@
                   cloud/await-session (fn [& _] (throw (ex-info "poll failed" {})))
                   cloud/stop-session! (fn [_ id strategy]
                                         (reset! stopped [id strategy]))]
-      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"poll failed"
+      (is (thrown-with-msg? kerror/ExceptionInfo #"poll failed"
                             (probe/execute! probe/defaults "not-printed")))
       (is (= ["session-safe" :session] @stopped)))))
 
